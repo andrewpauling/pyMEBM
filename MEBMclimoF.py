@@ -26,7 +26,7 @@ from attrdict import AttrDict
 
 class MoistEBM():
 
-    def __init__(self, Dmag=0.2598):
+    def __init__(self, diffusion='moist', Dmag=None):
         self.timestep = 1./500000
         self.itermax = 10000000
 
@@ -51,7 +51,6 @@ class MoistEBM():
         self.param['alf_ice'] = 0.55   # ice covered albedo.
 
         # Moisture parameters
-        self.param['relhum'] = 0.8   # relative humidity
         self.param['eps'] = 0.622    # moisture coonstant
         self.param['psfc'] = 9.8e4   # (Pa)
         self.param['e0'] = 611.2     # vap. press (Pa)
@@ -60,11 +59,37 @@ class MoistEBM():
         self.param['L'] = 2.45e6     # latent heat of vaporization (J kg-1)
         self.param['cp'] = 1004      # (J kg-1 K-1)
 
+        # initialize diffusion scheme
+        self.diffusion = diffusion
+
+        if self.diffusion == 'moist':
+            self.param['relhum'] = 0.8   # relative humidity
+            if Dmag is not None:
+                self.Dmag = Dmag
+            else:
+                self.Dmag = 0.2598  # W/(m2 K)
+        elif self.diffusion == 'dry':
+            self.param['relhum'] = 0.
+            if Dmag is not None:
+                self.Dmag = Dmag
+            else:
+                self.Dmag = 0.44  # W/(m2 K)
+
         # magnitude of diffusivity
-        self.Dmag = Dmag  # D = 0.2598 W/(m2 K) is the value used by TF10
-        self.D = Dmag*np.ones(self.x.size+1)  # diffusivity for MSE
+        self.D = self.Dmag*np.ones(self.x.size+1)  # diffusivity for MSE
 
         self.M = self._create_div_matrix()
+
+    def __repr__(self):
+        summary = ['<pyMEBM.{}>'.format(type(self).__name__)]
+        summary.append("diffusion: '{}'".format(self.diffusion))
+        summary.append("D: {} W/m^2/K".format(self.Dmag))
+        summary.append("RH: {}".format(self.param['relhum']))
+        summary.append("---Parameters---")
+        for key, item in self.param.items():
+            if key != 'relhum':
+                summary.append('{}: {}'.format(key, item))
+        return '\n'.join(summary)
 
     def _create_xvec(self):
         x = np.arange(-1.0+self.delx/2, 1.0, self.delx)
