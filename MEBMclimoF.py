@@ -132,17 +132,11 @@ class MoistEBM():
         A = self.param.A0
         B = self.param.B0*np.ones(self.x.size)  # longwave cooling [W/(m2 K)]
 
-        # For dry energy balance model, uncomment these lines:
-        # Dmag = 0.44; # magnitude of diffusivity [W/(m2 K)]
-        # D=Dmag*np.ones(jmx+1); # diffusivity for sensible (cp*T)
-        # relhum = 0;  # switch off humidity
-
         # set up inital T profile
         T = self._create_t_profile()
-        F = np.array([])
         alf0 = self.param.alf_noice*np.ones(self.x.size)
         q0 = self.param['eps']*self.param['relhum']/self.param['psfc'] * \
-                self.param['e0']
+            self.param['e0']
         dT0 = self.timestep/self.param['Cl']
         Src0 = self.param['Q0']*(1-0.241*(3*self.x*self.x-1))
         
@@ -153,8 +147,7 @@ class MoistEBM():
         # Timestepping loop
         start = time.time()
         while imbal > 0.001:
-            
-        # for j in np.arange(self.itermax-1):  # use NMAX-1 #for n=1:NMAX
+
             # Calculate Source  (ASR) for this loop:
 
             alf = np.where(T <= -10, self.param['alf_ice'], alf0)
@@ -172,20 +165,12 @@ class MoistEBM():
 
             # Calculate new T from Source and Sink terms.
             # Diffuse moist static energy (theta_e)
-            # hdiv = np.gradient((1-self.x**2)*np.gradient(theta_e, self.x),
-            #                   self.x)*self.Dmag
-            # dT = self.timestep/self.param.Cl*(Src - A - B*T) + hdiv
+
             dT = dT0*(Src - A - (B*T) + np.matmul(self.M, theta_e))
 
             T += dT
-            
-            imbal = (Src - A - B*T).mean()
 
-#            # Check to see if global mean energy budget has converged:
-#            Fglob = np.mean(Src - A - (B*T))
-#
-#            if np.absolute(Fglob) < 0.001:
-#                break
+            imbal = (Src - A - B*T).mean()
 
         print('Tmean = '+str(np.mean(T)))
         print('j = '+str(j))
