@@ -81,8 +81,8 @@ CMIP5_Rf = np.asarray(matLabData['CMIP5_Rf']) #Radiative forcing
 CMIP5_G = np.asarray(matLabData['CMIP5_G']) #Ocean heat uptake
 CMIP5_names = np.asarray(matLabData['CMIP5_names']) #names for the 11 CMIP5 models
 
-B = -griddata(CMIP5_lat,np.mean(CMIP5_lambda,axis=1),phi, method='linear'); #taking average over the 13 CMIP5 models
-R_frc = griddata(CMIP5_lat,np.mean((CMIP5_Rf + CMIP5_G),axis=1),phi, method='linear'); #CO2 forcing Rf plus ocean heat uptake G
+#B = -griddata(CMIP5_lat,np.mean(CMIP5_lambda,axis=1),phi, method='linear'); #taking average over the 13 CMIP5 models
+#R_frc = griddata(CMIP5_lat,np.mean((CMIP5_Rf + CMIP5_G),axis=1),phi, method='linear'); #CO2 forcing Rf plus ocean heat uptake G
 #R_frc = griddata(CMIP5_lat,np.mean((CMIP5_Rf),axis=1),phi, method='linear'); #CO2 forcing Rf no ocean heat uptake G
 
 plt.plot(CMIP5_lat,np.mean(CMIP5_lambda,axis=1))
@@ -98,8 +98,8 @@ plt.ylabel('Feedback (W/m2/K)', fontsize=14)
 plt.show()
 
 # For flat forcing, uniform feedbacks, no ocean heat uptake, uncomment these lines:
-#R_frc = 7.8; # uniform forcing in [W/m2] for a quadrupling of CO2, 7.8 value taken as global average of CMIP5
-#B = 1.4*np.ones(x.size) # uniform feedback [W/m2/K], 1.4 value taken as average of CMIP5
+R_frc = 7.8; # uniform forcing in [W/m2] for a quadrupling of CO2, 7.8 value taken as global average of CMIP5
+B = 1.4*np.ones(x.size) # uniform feedback [W/m2/K], 1.4 value taken as average of CMIP5
 #print('Using flat forcing and feedbacks instead of CMIP5!!')
 
 #Create matrix to take a divergence of something it acts on   
@@ -173,8 +173,8 @@ plt.gca().tick_params(labelsize=14)
 
 #fig.savefig('hw2_q3ddry.pdf',bbox_inches='tight')
 
-with open('tempvars_3d.pkl','wb') as f:
-    pkl.dump((x,T,CMIP5_lat,CMIP5_T),f)
+#with open('tempvars_3d.pkl','wb') as f:
+#    pkl.dump((x,T,CMIP5_lat,CMIP5_T),f)
 
 fig2 = plt.figure(2,figsize=(9,6))
 plt.plot(x,h_pert)
@@ -219,5 +219,5 @@ plt.legend(('Forcing','Feedbacks','Transport','Ocean Heat Transport','Total'),\
 
 #fig4.savefig('hw3_q3ddry_WARM.pdf',bbox_inches='tight')
 
-with open('warmvars_3d.pkl','wb') as f:
-    pkl.dump((warm_Rf,warm_feedback,warm_trans,warm_G,warm_all),f)
+#with open('warmvars_3d.pkl','wb') as f:
+#    pkl.dump((warm_Rf,warm_feedback,warm_trans,warm_G,warm_all),f)
