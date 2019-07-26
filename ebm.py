@@ -8,6 +8,7 @@ Created on Wed Feb 20 09:58:16 2019
 
 import numpy as np
 import scipy.io as io
+from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 import pickle as pkl
 import time
@@ -81,7 +82,6 @@ class EBM(object):
                  alb_noice=0.3):
 
         self.timestep = 1./500000
-        self.itermax = 10000000
 
         # Define grid spacing
         self.nx = 101
@@ -89,12 +89,12 @@ class EBM(object):
 
         self.x = self._create_xvec()
         self.phi = np.arcsin(self.x)*180/np.pi
-
-        # initialize diffusion scheme
+        
+                # initialize diffusion scheme
         self.diffusion = diffusion
-
+        
         self.param = AttrDict()
-
+        
         # Initialize diffusion parameter
         if self.diffusion == 'moist':
             if D is not None:
@@ -178,6 +178,46 @@ class EBM(object):
 
     def _create_t_profile(self):
         return 0.5*(1-1*self.x*self.x)
+
+    def _load_ctrl_data(self):
+        # loads matlab file as a dictionary with some metadata
+        matLabData = io.loadmat('ERAtemperature.mat')
+
+        lat = np.asarray(matLabData['lat'])
+        T_ctrl = np.asarray(matLabData['T'])
+        # average N & S hemispheres for symmetry
+        T_ctrl = 0.5*(T_ctrl+np.flipud(T_ctrl))
+        T_ctrl = griddata(np.sin(np.deg2rad(lat)), T_ctrl, self.x,
+                          method='linear')
+        T_ctrl = np.squeeze(T_ctrl, axis=1)
+        # here T is in oC. q is g kg-1
+        q_ctrl = self.const['eps']*self.param['relhum']/self.const['psfc'] *\
+            self.const['e0']*np.exp(
+                    self.param['a']*(T_ctrl)/(self.param['b']+(T_ctrl)))
+        theta_e_ctrl = 1/self.const['cp'] * \
+            (self.const['cp']*((T_ctrl)+273.15) + self.const['L']*q_ctrl)
+
+        return T_ctrl, theta_e_ctrl
+    
+    def _load_cmip5_data(self):
+        #CMIP5 ensemble-mean feedback and forcing values from 4xCO2
+        # simulations (taken at year 100)
+        # feedback, forcing and heat uptake for 11 models
+        matLabData = io.loadmat('CMIP5_Rf_G_lambda.mat')
+        CMIP5_lat = np.asarray(matLabData['CMIP5_lat'])  # latitude
+        CMIP5_T = np.asarray(matLabData['CMIP5_T'])  # Temperature change
+        CMIP5_lambda = np.asarray(matLabData['CMIP5_lambda'])  # feedbacks
+        CMIP5_Rf = np.asarray(matLabData['CMIP5_Rf'])  # Radiative forcing
+        CMIP5_G = np.asarray(matLabData['CMIP5_G'])  # Ocean heat uptake
+        CMIP5_names = np.asarray(matLabData['CMIP5_names'])
+
+        B = -griddata(CMIP5_lat,np.mean(CMIP5_lambda,axis=1), self.phi,
+                      method='linear')  # taking average over CMIP5 models
+        R_frc = griddata(CMIP5_lat,np.mean((CMIP5_Rf + CMIP5_G),axis=1),
+                         self.phi, method='linear')
+        # CO2 forcing Rf plus ocean heat uptake G
+
+
 
     def compute(self):
 
