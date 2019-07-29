@@ -142,8 +142,7 @@ class EBM(object):
         self.M = self._create_div_matrix()
 
         self.variables = AttrDict()
-
-        self.variables.T = self._create_t_profile()
+        
         self.variables.theta_e = np.zeros(self.nx)
         self.variables.q = np.zeros(self.nx)
 

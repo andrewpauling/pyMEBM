@@ -64,8 +64,8 @@ class EBMPert(EBM):
         theta_e_ctrl = 1/self.const['cp'] * \
             (self.const['cp']*((T_ctrl)+273.15) + self.const['L']*q_ctrl)
 
-        self.T_ctrl = T_ctrl
-        self.theta_e_ctrl = theta_e_ctrl
+        self.variables['T_ctrl'] = T_ctrl
+        self.variables['theta_e_ctrl'] = theta_e_ctrl
 
     def _load_forcing_feedbacks(self):
         # CMIP5 ensemble-mean feedback and forcing values from 4xCO2
@@ -110,14 +110,14 @@ class EBMPert(EBM):
 
         # spec. hum g/kg, and theta_e
         self.variables['q'] = q0 * \
-            np.exp(self.const['a']*(self.variables['T']+self.T_ctrl) /
-                   (self.const['b']+self.variables['T']+self.T_ctrl))
+            np.exp(self.const['a']*(self.variables['T']+self.variables['T_ctrl']) /
+                   (self.const['b']+self.variables['T']+self.variables['T_ctrl']))
 
         self.variables['theta_e'] = 1/self.const['cp'] *\
-            (self.const['cp']*(self.variables['T']+self.T_ctrl+273.15) +
+            (self.const['cp']*(self.variables['T']+self.variables['T_ctrl']+273.15) +
              self.const['L']*self.variables['q'])
 
-        theta_e_pert = self.variables['theta_e'] - self.theta_e_ctrl
+        theta_e_pert = self.variables['theta_e'] - self.variables['theta_e_ctrl']
 
         Src = self.param['A0'] + \
             self.param['B0']*(self.variables['T'])
@@ -130,7 +130,7 @@ class EBMPert(EBM):
 
         print('Integrating to convergence...')
         start = time.time()
-        while np.abs(imbal) > 0.00001:
+        while np.abs(imbal) > 0.001:
             self.step()
             imbal = (self.R_frc - self.lamparam*self.variables['T']).mean()
         end = time.time()

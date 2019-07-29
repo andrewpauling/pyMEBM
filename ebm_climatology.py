@@ -30,17 +30,12 @@ class EBMClimo(EBM):
     def _create_t_profile(self):
         return 0.5*(1-1*self.x*self.x)
 
-    def step(self):
-        # Pre-compute some constants for the loop
-        alf0 = self.param.alb_noice*np.ones(self.nx)
-        q0 = self.const['eps']*self.param['relhum']/self.const['psfc'] * \
-            self.const['e0']
-
-        Src0 = self.param['Q0']*(1-0.241*(3*self.x*self.x-1))
+    def step(self, alf0, q0, Src0):
 
         # Calculate Source  (ASR) for this loop:
-        alf = np.where(self.variables['T'] <= -10, self.param['alb_ice'], alf0)
-        self.variables['Src'] = Src0*(1-alf)
+        #alf = np.where(self.variables['T'] <= -10, self.param['alb_ice'], alf0)
+        alf0[self.variables['T'] <= -10] = self.param['alb_ice']
+        self.variables['Src'] = Src0*(1-alf0)
 
         # spec. hum g/kg, and theta_e
         self.variables['q'] = q0*np.exp(self.const['a']*self.variables['T'] /
@@ -54,13 +49,20 @@ class EBMClimo(EBM):
                                            self.variables['Src'])
 
     def integrate_converge(self):
+
+        alf0 = self.param['alb_noice']*np.ones(self.nx)
+        q0 = self.const['eps']*self.param['relhum']/self.const['psfc'] * \
+            self.const['e0']
+
+        Src0 = self.param['Q0']*(1-0.241*(3*self.x*self.x-1))
+
         imbal = (self.variables['Src'] - self.param['A0'] -
                  self.param['B0']*self.variables['T']).mean()
 
         print('Integrating to convergence...')
         start = time.time()
         while np.abs(imbal) > 0.01:
-            self.step()
+            self.step(alf0, q0, Src0)
             imbal = (self.variables['Src'] - self.param['A0'] -
                      self.param['B0']*self.variables['T']).mean()
         end = time.time()
