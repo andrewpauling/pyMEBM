@@ -33,7 +33,6 @@ class EBMClimo(EBM):
     def step(self):
         alf = self.const['alf0'].copy()
         # Calculate Source  (ASR) for this loop:
-        #alf = np.where(self.variables['T'] <= -10, self.param['alb_ice'], alf0)
         alf[self.variables['T'] <= -10] = self.param['alb_ice']
         self.variables['Src'] = self.const['Src0']*(1-alf)
 
@@ -52,8 +51,8 @@ class EBMClimo(EBM):
     def integrate_converge(self):
 
         self.const['alf0'] = self.param['alb_noice']*np.ones(self.nx)
-        self.const['q0'] = self.const['eps']*self.param['relhum']/self.const['psfc'] * \
-            self.const['e0']
+        self.const['q0'] = self.const['eps']*self.param['relhum'] / \
+            self.const['psfc']*self.const['e0']
 
         self.const['Src0'] = self.param['Q0']*(1-0.241*(3*self.x*self.x-1))
 
