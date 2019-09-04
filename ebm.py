@@ -257,7 +257,7 @@ class EBM(object):
         lat = np.asarray(matLabData['lat'])
         t = np.asarray(matLabData['T'])
         fig = plt.figure(1)
-        plt.plot(self.x, self.T)
+        plt.plot(self.x, self.variables['T'])
         plt.plot(np.sin(np.deg2rad(lat)), t)
         plt.xlabel('sin(lat)', fontsize=14)
         plt.ylabel('Temperature', fontsize=14)
@@ -265,7 +265,7 @@ class EBM(object):
         plt.show()
 
         fig2 = plt.figure(2)
-        plt.plot(self.x, self.h)
+        plt.plot(self.x, self.variables['theta_e'])
         plt.xlabel('sin(lat)', fontsize=14)
         plt.ylabel('MSE (J/kg)', fontsize=14)
         plt.show()
