@@ -98,6 +98,14 @@ class EBMPert(EBM):
         return '\n'.join(summary)
 
     def _load_ctrl_data(self):
+        """
+        Load control temperature profile that perturbations are relative to.
+
+        Returns
+        -------
+        None.
+
+        """
         # loads matlab file as a dictionary with some metadata
         matLabData = io.loadmat('ERAtemperature.mat')
 
@@ -119,6 +127,14 @@ class EBMPert(EBM):
         self.variables['theta_e_ctrl'] = theta_e_ctrl
 
     def _load_forcing_feedbacks(self):
+        """
+        Load forcings and feedbacks depending on kwargs.
+
+        Returns
+        -------
+        None.
+
+        """
         # CMIP5 ensemble-mean feedback and forcing values from 4xCO2
         # simulations (taken at year 100)
         # feedback, forcing and heat uptake for 11 models
@@ -154,6 +170,14 @@ class EBMPert(EBM):
         self.lamparam = B
 
     def step(self):
+        """
+        Step the model forward in time.
+
+        Returns
+        -------
+        None.
+
+        """
 
         # Pre-compute some constants for the loop
         q0 = self.const['eps']*self.param['relhum']/self.const['psfc'] * \
@@ -177,6 +201,14 @@ class EBMPert(EBM):
         super(EBMPert, self).step_forward(theta_e_pert, Src)
 
     def integrate_converge(self):
+        """
+        Integrate the perturbation EBM to convergence.
+
+        Returns
+        -------
+        None.
+
+        """
         imbal = (self.R_frc - self.lamparam*self.variables['T']).mean()
 
         print('Integrating to convergence...')
