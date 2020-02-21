@@ -60,12 +60,12 @@ class EBM(object):
                                 unit: :math:`\\textrm{W m}^{-2}\\textrm{K}^{-1}`
 
                                 -default value: ``2.09``
-                                
+
     :param float alb_ice:       value of ice albedo  \n
                                 unit: ``unitless``
 
                                 -default value: ``0.55``
-                                
+
     :param float alb_noice:     value of non-ice albedo  \n
                                 unit: ``unitless``
 

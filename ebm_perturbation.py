@@ -18,7 +18,58 @@ from pyMEBM.ebm import EBM
 
 class EBMPert(EBM):
     """
-    Class containing a perturbation energy balance model
+    This class sets up an energy balance model with diffusion of either
+    sensible heat or moist static energy, as in Roe et al., 2015.
+
+    **Initialization parameters** \n
+
+    An instance of ``EBMPert`` is initialized with the following
+    arguments *(for detailed information see Object attributes below)*:
+
+    :param str diffusion:       string that sets the type of diffusion to be
+                                used. Valid values: 'dry' or 'moist'
+
+                                - default value: ``'moist'``
+
+    :param float D:             value of the diffusion coefficient \n
+                                unit: :math:`\\textrm{W m}^{-2}`
+
+                                - default value: ``0.2598 (moist), 0.44 (dry)``
+
+    :param float Q0:            value of the solar insolation    \n
+                                unit: :math:`\\textrm{W m}^{-2}`
+
+                                -default value: ``342.0``
+
+    :param float A0:            value of longwave parameter A in A + BT  \n
+                                unit: :math:`\\textrm{W m}^{-2}`
+
+                                -default value: ``207.3``
+
+    :param float B0:            value of longwave parameter B in A + BT  \n
+                                unit: :math:`\\textrm{W m}^{-2}\\textrm{K}^{-1}`
+
+                                -default value: ``2.09``
+
+    :param float alb_ice:       value of ice albedo  \n
+                                unit: ``unitless``
+
+                                -default value: ``0.55``
+
+    :param float alb_noice:     value of non-ice albedo  \n
+                                unit: ``unitless``
+
+                                -default value: ``0.3``
+
+    :param str forcing:         flag to specify forcing to be used. Options
+                                for now are 'flat' (default) or 'CMIP5'
+
+    :param str feedbacks:       flag to specify feedbacks to be used. Options
+                                for now are 'flat' (default) or 'CMIP5'
+                                
+    :param bool ocn_heat_uptake: flag to include ocean heat uptake as part of
+                                forcing. False by default
+                                
     """
     def __init__(self,
                  ocn_heat_uptake=False,
@@ -47,6 +98,14 @@ class EBMPert(EBM):
         return '\n'.join(summary)
 
     def _load_ctrl_data(self):
+        """
+        Load control temperature profile that perturbations are relative to.
+
+        Returns
+        -------
+        None.
+
+        """
         # loads matlab file as a dictionary with some metadata
         matLabData = io.loadmat('ERAtemperature.mat')
 
@@ -68,6 +127,14 @@ class EBMPert(EBM):
         self.variables['theta_e_ctrl'] = theta_e_ctrl
 
     def _load_forcing_feedbacks(self):
+        """
+        Load forcings and feedbacks depending on kwargs.
+
+        Returns
+        -------
+        None.
+
+        """
         # CMIP5 ensemble-mean feedback and forcing values from 4xCO2
         # simulations (taken at year 100)
         # feedback, forcing and heat uptake for 11 models
@@ -103,6 +170,14 @@ class EBMPert(EBM):
         self.lamparam = B
 
     def step(self):
+        """
+        Step the model forward in time.
+
+        Returns
+        -------
+        None.
+
+        """
 
         # Pre-compute some constants for the loop
         q0 = self.const['eps']*self.param['relhum']/self.const['psfc'] * \
@@ -126,6 +201,14 @@ class EBMPert(EBM):
         super(EBMPert, self).step_forward(theta_e_pert, Src)
 
     def integrate_converge(self):
+        """
+        Integrate the perturbation EBM to convergence.
+
+        Returns
+        -------
+        None.
+
+        """
         imbal = (self.R_frc - self.lamparam*self.variables['T']).mean()
 
         print('Integrating to convergence...')
