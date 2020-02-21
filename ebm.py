@@ -81,7 +81,8 @@ class EBM(object):
                  alb_ice=0.55,
                  alb_noice=0.3):
 
-        self.timestep = 1./500000
+        self.timestep = 1./50000
+        self.nmax = 60000
 
         # Define grid spacing
         self.nx = 101
