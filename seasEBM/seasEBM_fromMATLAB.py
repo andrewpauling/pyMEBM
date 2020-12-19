@@ -60,8 +60,8 @@ tf = 50.0  # [yr] Final time
 # time step in fraction of year
 # make denominator an integer multiple of 360
 # if code blows up, try shortening the time step (this is explicit scheme)
-delt = 1./(360*6)
-print(f'delt = {delt}')  # [yr^-1] trial and error 140 time steps a day.
+delt = 1/(360*6)
+print(f'delt = {delt:.6f}')  # [yr^-1] trial and error 140 time steps a day.
 
 # number of time steps
 nts = int((tf-ts)/delt + 1)
@@ -79,7 +79,7 @@ season_flg = 1          # seasonal cycle? (1=yes, 0=no), day 1 = vernal equinox
 alb_flg = 1             # albedo temperature feedback? (1=yes, 0 = no)
 symmetric_radn_flg = 0  # symmetrize insolation about equator? (1=yes, 0=no)
 two_layer_flg = 1       # two layer ocean model? (1=yes, 0=no)
-noise_flg = 0           # noise flag (can be specified in many ways)
+noise_flg = 1           # noise flag (can be specified in many ways)
 
 # set up x array (latitude).
 jmx = 101
@@ -111,7 +111,7 @@ For DRY EBM, uncomment these values
 # conversion to regular units here. For HF10, D~0.28
 # For dry EBM see Armouretal19, but should be ~0.44
 Dmag = D_HF10*psfc*cp/(g*Re**2)  # [W m^-2 K^-1]
-print(f'D = {Dmag}  W/(m2 K)')  # D = 0.2598 W/(m2 K) is the value used by TF10
+print(f'D = {Dmag:.4f}  W/(m2 K)')  # D = 0.2598 W/(m2 K) is the value used by TF10
 
 D = Dmag*np.ones(jmx+1)       # diffusivity array (at each cell edge)
 D_mid = 0.5*(D[:-1] + D[1:])  # diffusivity at cell midpoing.
@@ -126,7 +126,7 @@ if two_layer_flg:
 else:
     gamma = np.zeros(x.size)  # no coupling b/t surface and deep ocean
 
-print(f'two-layer coupling gamma = {np.mean(gamma)} W m-2 K-1')
+print(f'two-layer coupling gamma = {np.mean(gamma):.4f} W m-2 K-1')
 
 mix_depth = 35   # [m] mixed-layer depth
 # depth of mixed layer (assuming water), can be specified with latitude.
@@ -136,14 +136,14 @@ cw = 4200    # [J kg^-1 K^-1] heat capacity of water
 
 # note: units of heat capacity allow units of years for time
 C_L1 = rho_w*cw*h_ml/(np.pi*1e7)  # heat capacity of layer 1 (upper layer)
-print(f'h_mix_lyr = {mix_depth} m; C_L1 = {np.mean(C_L1)} J /(m2 K s yr^-1)')
+print(f'h_mix_lyr = {mix_depth} m; C_L1 = {np.mean(C_L1):.3f} J /(m2 K s yr^-1)')
 
 # deep layer for two-layer ocean model
 # deep-layer depth based roughly on CMIP5 fit from Armour(NCC, 2017)
 h_d = 800  # [m]
 h_ml = mix_depth*np.ones(x.size)  # [m] depth of deep-ocean layer
 C_L2 = rho_w*cw*h_d/(np.pi*1e7)  # heat capacity of layer 2 (upper layer)
-print(f'h_deep = {h_d} m; C_L2 = {np.mean(C_L2)} J /(m2 K s yr^-1)')
+print(f'h_deep = {h_d} m; C_L2 = {np.mean(C_L2):.3f} J /(m2 K s yr^-1)')
 
 # daily or annual mean insolation from Huybers and Eisenman
 # calling it just once here, outside the main timeloop, is much faster...
@@ -172,7 +172,8 @@ if season_flg == 0:  # no annual cycle
         Sday[i, :] = tmp
 
 # Legendre polynomial realization of mean annual insol.
-# Q = 340.0; disp(['Q = ' num2str(Q) ' W/m2']); %0.25*solar constant [W/m2], small compated to some values
+# Q = 340.0; disp(['Q = ' num2str(Q) ' W/m2']);
+# %0.25*solar constant [W/m2], small compated to some values
 # S = Q*(1-0.241*(3*x.^2-1)); S=S(:);
 
 # set up inital T profile; simple guess to facilitate convergence.
@@ -225,7 +226,7 @@ for n in range(nts-1):   # the -1 stops the loop before getting to yr_end +1
         # add interannual noise
         if noise_flg:
             # different random noise at each latitude
-            noise = 15*np.rand.randn(jmx)  # [W m-2]
+            noise = 15*np.random.randn(jmx)  # [W m-2]
         else:
             noise = np.zeros(jmx)
     # is it a new month?
@@ -278,7 +279,8 @@ for n in range(nts-1):   # the -1 stops the loop before getting to yr_end +1
     # Calculate new T.
 
     #   Uncomment for diffusion of dry static energy
-    #   dT = delt/Cl*((1-alb).*S - (A+B.*T) + Mdiv*T + gamma*(Td-T)); if n == 1,disp(['Diffusing T']),end;
+    #   dT = delt/Cl*((1-alb).*S - (A+B.*T) + Mdiv*T + gamma*(Td-T));
+    # if n == 1,disp(['Diffusing T']),end;
 
     # Diffuse moist static energy (theta_e)
     dT = delt/C_L1*((1-alb)*S - (A+B*T) + np.matmul(Mdiv, theta_e) +
@@ -295,7 +297,7 @@ for n in range(nts-1):   # the -1 stops the loop before getting to yr_end +1
     if new month, output data
     --------------------------------
     """
-    if newmonth_flg == 1:
+    if newmonth_flg:
         Tout[yr-1, mnth-1, :] = T
         Tdout[yr-1, mnth-1, :] = Td   # can be junked if using ony 1layer
         newmonth_flg = 0         # set new day flag to zero
@@ -310,8 +312,8 @@ Everything else (probably) can be diagnosed or added to the output
 """
 # climatological fields
 divFtot = -np.matmul(Mdiv, theta_e)  # divergence of total flux
-src = (1-alb)*S                     # absorbed solar radn
-h = theta_e*cp                      # surface mse (moist enthalpy)
+src = (1-alb)*S                      # absorbed solar radn
+h = theta_e*cp                       # surface mse (moist enthalpy)
 
 # total flux, note the factors to get units of W
 Ftot = -2*np.pi*Re**2/cp*D_mid*(1-x**2)*np.gradient(h, x)
@@ -430,3 +432,15 @@ xvec = np.arange(50)
 fig2 = plt.figure(2)
 plt.pcolor(xvec, phi, Tmat.T)
 cb = plt.colorbar()
+
+Tstd = np.std(np.mean(Tout, 1), 0)
+
+fig3 = plt.figure(3)
+plt.plot(x, Tstd)
+plt.ylabel('$\sigma$ [K]')
+plt.xlabel('sin(latitude)')
+plt.grid()
+
+fig3.savefig('/Users/andrewpauling/Google Drive (apauling@uw.edu)/PhD/variability/figures/ebm_Tstd.png',
+             bbox_inches='tight',
+             dpi=150)
