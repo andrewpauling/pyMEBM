@@ -144,8 +144,8 @@ class EBM(object):
 
         self.variables = {}
 
-        self.variables.theta_e = np.zeros(self.nx)
-        self.variables.q = np.zeros(self.nx)
+        self.variables["theta_e"] = np.zeros(self.nx)
+        self.variables["q"] = np.zeros(self.nx)
 
     def __repr__(self):
         summary = ["<pyMEBM.{}>".format(type(self).__name__)]
